@@ -1,6 +1,9 @@
 // import logo from './logo.svg';
 import './App.css';
 import './roomba.js'
+// import Roomba from './Roomba-component'
+
+import RoombaBoard from './RoombaBoard.js'
 
 function App() {
   return (
@@ -12,6 +15,8 @@ function App() {
         </p>
       
       </header>
+      < RoombaBoard />
+      {/* < R/> */}
     </div>
   );
 }
