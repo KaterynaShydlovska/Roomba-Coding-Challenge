@@ -1,32 +1,39 @@
 import React, { useState } from 'react';
 import Blank from './blank.png';
 import Roomba from './roomba.jpg';
+import Green from './green.jpg';
+
 import Table from 'react-bootstrap/Table'
 
 
 
 const RoombaBoard = () => {
-    let initialRows = [];
-    let res= {}
+
+  const [rows, setRows] = useState([]);
+  const [result, setResult] = useState({});
+  const [end, setEnd] = useState(false);
+  const [table, setTable] = useState(["Step", "location", "Action", "dirt collected", "walllHits"]);
 
 
-    function kickOff (json){
-        let newState = []
+    const kickOff = async (json) => {
+        let r = roomba(json[0]);
+        setResult(r);
+        setTimeout(() => moveRoomba(0, r), 1000);
+    }
 
-        for(let i =0; i<json[0].roomDimensions[0]; i++){
-            newState.push([]);
-            for(let k=0; k<json[0].roomDimensions[1]; k++){
-                if(i === json[0].initialRoombaLocation[0] && k === json[0].initialRoombaLocation[1]) {
-                    newState[i].push('roomba')
-                } else {
-                    newState[i].push('blank')
-                }
+    const initState = (x, y, dirtMap) => {
+      let startState = []
+      for(let i =0; i<x; i++){
+        startState.push([]);
+          for(let k=0; k<y; k++){
+            if(dirtMap[i+","+k]){
+              startState[i].push('dirt')
+            } else {
+              startState[i].push('blank')
             }
-        }
-
-        setRows(newState);
-        let r = roomba(json[0], newState);
-        moveRoomba(newState, r.roombaSteps);
+          }
+      }
+      return startState;
     }
     
     
@@ -40,39 +47,24 @@ const RoombaBoard = () => {
       
     }
 
-    function moveRoomba (initial, arr) {
-           for(let i = 0; i< arr.length; i++) {
-            setTimeout(function() {
-                let temp = initial
-                temp[arr[i][0]][arr[i][1]]="roomba";
-                setRows(temp);
-                console.log("moving", i, temp)
-            }, 10);
-           }
+    const moveRoomba = async (position, res) => {
+      if (position === res.roombaSteps.length){
+        console.log(res);
+        setEnd(true);
+        return;
+      } else {
+        let state = initState(res.roomDimensions[0], res.roomDimensions[1], res.dirtMap)
+        let curentSteps = res.roombaSteps[position];
+        state[curentSteps[0]][curentSteps[1]] = "roomba";
+        if(res.dirtMap[curentSteps[0] + "," + curentSteps[1]]) {
+          delete res.dirtMap[curentSteps[0] + "," + curentSteps[1]]
+        }
+        setRows(state);
+        setTimeout(() =>  moveRoomba(position + 1, res), 2000);
+      }
     }
-    
 
-const [rows, setRows] = useState(initialRows);
-const [result, setResult] = useState(res);
-
-
-const displayRows = rows.map(row => 
-    <li style={{listStyleType: "none"}}>
-        
-        {row.map(e => {
-            switch(e) {
-                case 'blank':
-                    return<img src={Blank} style={{width: 70, height: 70, padding:0}}/>
-                case 'roomba':
-                return <img src={Roomba} style={{width: 70, height: 70, padding:0}}/>
-            }
-        })
-    }
-    </li>
-
-)
- function roomba(json, newState){
-     console.log()
+function roomba(json){
     let dirts =0;
     let roombaLocation;
     let wallHit =0;
@@ -88,15 +80,13 @@ const displayRows = rows.map(row =>
     let i =json.initialRoombaLocation[0];
     let j =json.initialRoombaLocation[1];
     let distanse;
-    let roombaSteps = [];
+    let roombaSteps = [[i,j]];
   
   
   while(k < json.drivingInstructions.length) {
-    
-       console.log(json.drivingInstructions[k], 'k')
-  
+    table.push([k, [i, j], json.drivingInstructions[k], dirts, wallHit])
+    setTable(table);
        if(dirtMap[i+","+j]){
-         console.log(dirts, i+","+j)
           dirts+=1;
        }
   
@@ -119,21 +109,20 @@ const displayRows = rows.map(row =>
         k++;
         roombaSteps.push([i,j])
          roombaLocation = [i,j]
-         distanse = json.drivingInstructions.length - wallHit;
-  
-        console.log(wallHit, 'wallhit here')
-     
+         distanse = json.drivingInstructions.length - wallHit;     
     }
-    let lastResult =   {
-        'Total Distance Traveled:': distanse,
-        'Roomba Location': roombaLocation, 
-        'Total Dirt Collacted': dirts,
-        'Total WAll Hit':wallHit,
-        "roombaSteps" : roombaSteps
+    let lastResult = {
+      dirtMap: dirtMap,
+      roomDimensions : json.roomDimensions,
+      beg: json.initialRoombaLocation,
+      distanse: distanse,
+      roombaLocation: roombaLocation, 
+      dirts: dirts,
+      wallHit:wallHit,
+      roombaSteps : roombaSteps
     }
 
-    console.log(lastResult, 'res')
-    setResult(lastResult);
+    console.log(lastResult);
   return lastResult;
 }
 
@@ -144,23 +133,37 @@ return (
         <input type="file" accept=".json" onChange={e => {
           parseFile([...e.target.files], kickOff);
         }}/>
-        { displayRows}  
+        {rows.map(row => 
+    <li style={{listStyleType: "none"}}>
+        
+        {row.map(e => {
+            switch(e) {
+                case 'blank':
+                    return<img src={Blank} style={{width: 70, height: 70, padding:0}}/>
+                case 'dirt':
+                  return<img src={Green} style={{width: 70, height: 70, padding:0}}/>
+                case 'roomba':
+                return <img src={Roomba} style={{width: 70, height: 70, padding:0}}/>
+            }
+        })
+    }
+    </li>
+
+)} 
     </div>
     <div>
-    {Object.keys(result).length > 0 ? Object.entries(result).map((t,k) => <li style={{listStyleType: "none"}}  key={k} value={t[0]}>{t[1]}</li>) : "NOTHING"}
-
-    
-    {/* <Table striped bordered hover size="sm">         
-  <tbody>
-    <tr>
-      <td></td>
-      <td></td>
-      <td></td>
-      <td></td>
-    </tr>
-  </tbody>
-
-</Table> */}
+    <table>
+    {table.length && end ? table.map(raw => {
+           return (
+            <tr key={raw[0]}>
+              <td>{raw[0]}</td>
+              <td>{raw[1]}</td>
+              <td>{raw[2]}</td>
+              <td>{raw[3]}</td>
+              <td>{raw[4]}</td>
+            </tr>
+          )
+}) : ""}</table>
     </div>
 
     </>
