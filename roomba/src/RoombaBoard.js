@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import Blank from './blank.png';
 import Roomba from './roomba.jpg';
-import Green from './green.jpg';
+import Dirt from './dirt.jpg';
 import './App.scss';
 
 
@@ -151,7 +151,7 @@ return (
                 case 'blank':
                     return<img src={Blank} style={{width: 70, height: 70, padding:0}}/>
                 case 'dirt':
-                  return<img src={Green} style={{width: 70, height: 70, padding:0}}/>
+                  return<img src={Dirt} style={{width: 70, height: 70, padding:0}}/>
                 case 'roomba':
                 return <img src={Roomba} style={{width: 70, height: 70, padding:0}}/>
             }
