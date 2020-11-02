@@ -1,1 +1,16 @@
-@import "~bootstrap/scss/bootstrap";
+table, th, td {
+    border: 1px solid black;
+    margin-top: 20px;
+    width: 700px;
+    padding: 15px;
+    
+}
+
+#table{
+    margin-left: 31%;
+}
+
+#result{
+   text-align: left;
+   margin-top: 30px;
+}

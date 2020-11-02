@@ -2,8 +2,9 @@ import React, { useState } from 'react';
 import Blank from './blank.png';
 import Roomba from './roomba.jpg';
 import Green from './green.jpg';
+import './App.scss';
 
-import Table from 'react-bootstrap/Table'
+
 
 
 
@@ -12,7 +13,7 @@ const RoombaBoard = () => {
   const [rows, setRows] = useState([]);
   const [result, setResult] = useState({});
   const [end, setEnd] = useState(false);
-  const [table, setTable] = useState(["Step", "location", "Action", "dirt collected", "walllHits"]);
+  const [table, setTable] = useState([["Step", "Location", "Action", "Dirt collected", "Wall hits"]]);
 
 
     const kickOff = async (json) => {
@@ -75,20 +76,22 @@ function roomba(json){
     for(let i = 0; i< json.dirtLocations.length; i++){
       dirtMap[json.dirtLocations[i]] = true;
     }
-
+    let step = 1;
     let k =0;
     let i =json.initialRoombaLocation[0];
     let j =json.initialRoombaLocation[1];
     let distanse;
     let roombaSteps = [[i,j]];
+    table.push([step, [i + ", "+ j], '', dirts, wallHit])
   
   
   while(k < json.drivingInstructions.length) {
-    table.push([k, [i, j], json.drivingInstructions[k], dirts, wallHit])
-    setTable(table);
+
        if(dirtMap[i+","+j]){
           dirts+=1;
        }
+      
+     
   
         if (json.drivingInstructions[k] === 'N' && j === json.roomDimensions[1] || json.drivingInstructions[k] === 'E'&& i === json.roomDimensions[0] || json.drivingInstructions[k] === 'S' && j === 0 || json.drivingInstructions[k] === 'W' && i === 0){
           wallHit +=1;
@@ -105,10 +108,17 @@ function roomba(json){
           if(json.drivingInstructions[k] === 'W'){
             i--
           }
+
+         
         }
+
+       
         k++;
+        step+=1
+        table.push([step, [i + ", "+ j], json.drivingInstructions[k], dirts, wallHit])
+        setTable(table);
         roombaSteps.push([i,j])
-         roombaLocation = [i,j]
+         roombaLocation = [i + ", "+ j]
          distanse = json.drivingInstructions.length - wallHit;     
     }
     let lastResult = {
@@ -122,7 +132,7 @@ function roomba(json){
       roombaSteps : roombaSteps
     }
 
-    console.log(lastResult);
+    console.log(lastResult, 'here');
   return lastResult;
 }
 
@@ -151,20 +161,38 @@ return (
 
 )} 
     </div>
-    <div>
-    <table>
-    {table.length && end ? table.map(raw => {
+    <div id='table'>
+    <table >
+    {table.length  && end ? table.map(raw => {
            return (
-            <tr key={raw[0]}>
-              <td>{raw[0]}</td>
-              <td>{raw[1]}</td>
-              <td>{raw[2]}</td>
-              <td>{raw[3]}</td>
-              <td>{raw[4]}</td>
-            </tr>
+            
+            <tr >
+            <td>{raw[0]}</td>
+            <td>{raw[1]}</td>
+            <td>{raw[2]}</td>
+            <td>{raw[3]}</td>
+            <td>{raw[4]}</td> 
+             </tr> 
+           
+   
           )
-}) : ""}</table>
+}) : ""}
+  </table>
+    {end ?
+    <div id='result'>
+        <p>Final Position: {result.roombaLocation}</p>
+        <p>Total Dirt Collected: {result.dirts}</p>
+        <p>Total Distance Traveled: {result.distanse}</p>
+        <p>Total Walls Hit: {result.wallHit}</p>
     </div>
+: ''}
+
+
+    </div>
+   
+  
+  
+   
 
     </>
 )
