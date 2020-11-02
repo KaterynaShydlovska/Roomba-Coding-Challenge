@@ -1,7 +1,7 @@
 // import logo from './logo.svg';
 import './App.css';
 import './roomba.js'
-// import Roomba from './Roomba-component'
+import './App.scss';
 
 import RoombaBoard from './RoombaBoard.js'
 
@@ -16,7 +16,6 @@ function App() {
       
       </header>
       < RoombaBoard />
-      {/* < R/> */}
     </div>
   );
 }
